@@ -216,10 +216,11 @@ $regionUrls = @{
     "West Europe" = "https://raw.githubusercontent.com/Azure/AzureStack-Tools/master/HCI/WestEuropeendpoints/westeurope-hci-endpoints.md"
     "Australia East" = "https://raw.githubusercontent.com/Azure/AzureStack-Tools/master/HCI/AustraliaEastendpoints/AustraliaEast-hci-endpoints.md"
     "Canada Central" = "https://raw.githubusercontent.com/Azure/AzureStack-Tools/master/HCI/CanadaCentralEndpoints/canadacentral-hci-endpoints.md"
+    "Central India" = "https://raw.githubusercontent.com/Azure/AzureStack-Tools/refs/heads/master/HCI/IndiaCentralEndpoints/IndiaCentral-hci-endpoints.md"
 }
 
 # Download and parse URLs from GitHub pages
-$region = Read-Host "Select a region (East US, West Europe, Australia East, Canada Central)"
+$region = Read-Host "Select a region (East US, West Europe, Australia East, Canada Central, Central India)"
 if ($regionUrls.ContainsKey($region)) {
     $endpointUrl = $regionUrls[$region]
     $endpointsContent = Invoke-WebRequest -Uri $endpointUrl -UseBasicParsing

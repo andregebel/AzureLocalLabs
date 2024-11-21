@@ -49,7 +49,7 @@ $LabConfig=@{AllowedVLANs="1-10,711-719" ; DomainAdminName='LabAdmin'; AdminPass
 
 #Azure Stack HCI 23H2
 #labconfig will not domain join VMs
-1..2 | ForEach-Object {$LABConfig.VMs += @{ VMName = "ASNode$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI23H2_G2.vhdx' ; HDDNumber = 4 ; HDDSize= 2TB ; MemoryStartupBytes= 20GB; VMProcessorCount="MAX" ; vTPM=$true ; Unattend="NoDjoin" ; NestedVirt=$true }}
+1..2 | ForEach-Object {$LABConfig.VMs += @{ VMName = "ASNode$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI23H2_G2.vhdx' ; HDDNumber = 4 ; HDDSize= 1TB ; MemoryStartupBytes= 24GB; VMProcessorCount="MAX" ; vTPM=$true ; Unattend="NoDjoin" ; NestedVirt=$true }}
 
 #Windows Admin Center in GW mode
 $LabConfig.VMs += @{ VMName = 'WACGW' ; ParentVHD = 'Win2022Core_G2.vhdx'; MGMTNICs=1}
@@ -460,12 +460,12 @@ Invoke-Command -ComputerName $Servers -ScriptBlock {
 
 #make sure az.accounts module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name az.accounts -RequiredVersion 2.13.2 -Force
+    Install-Module -Name az.accounts -RequiredVersion 3.0.0 -Force
 } -Credential $Credentials
 
 #make sure az.accounts module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name Az.ConnectedMachine -RequiredVersion 0.5.2 -Force
+    Install-Module -Name Az.ConnectedMachine -RequiredVersion 0.8.0 -Force
 } -Credential $Credentials
 
 ```

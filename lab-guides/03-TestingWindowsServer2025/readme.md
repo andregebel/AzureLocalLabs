@@ -1,8 +1,8 @@
-# Testing Windows Server 2025 Insider Preview
+# Testing Windows Server 2025
 
 <!-- TOC -->
 
-- [Testing Windows Server 2025 Insider Preview](#testing-windows-server-2025-insider-preview)
+- [Testing Windows Server 2025](#testing-windows-server-2025)
     - [About the lab](#about-the-lab)
     - [Prerequisites](#prerequisites)
     - [LabConfig](#labconfig)
@@ -44,11 +44,9 @@ You can also deploy physical servers (just change the image in task sequence) [u
 
 ## Prerequisites
 
-* Hydrated MSLab with LabConfig from [01-HydrateMSLab](../../admin-guides/01-HydrateMSLab/readme.md)
+* Hydrated MSLab with LabConfig from [01-HydrateMSLab](../../admin-guides/01-HydrateMSLab/readme.md) and latest Windows Server 2025 ISO
 
 * Understand [how MSLab works](../../admin-guides/02-WorkingWithMSLab/readme.md)
-
-* [Create Windows Server Insider VHDs](../../admin-guides/06-HowToCreateWindowsServerInsiderVHD/readme.md)) (GUI and Core)
 
 ## LabConfig
 
@@ -60,16 +58,16 @@ You can notice, that there are VLANs 711-719 as lab will use default NetATC VLAN
 $LabConfig=@{AllowedVLANs="1-10,711-719" ; DomainAdminName='LabAdmin'; AdminPassword='LS1setup!' ; DCEdition='4'; Internet=$true ; AdditionalNetworksConfig=@(); VMs=@()}
 
 #S2D Nodes
-1..2 | ForEach-Object {$LABConfig.VMs += @{ VMName="S2D$_" ; Configuration='S2D' ; ParentVHD='WinSrvInsiderCore_26063.vhdx' ; HDDNumber=4 ; HDDSize=2TB ; MemoryStartupBytes=1GB; VMProcessorCount=4 ; vTPM=$true}}
+1..2 | ForEach-Object {$LABConfig.VMs += @{ VMName="S2D$_" ; Configuration='S2D' ; ParentVHD='Win2025Core_G2.vhdx' ; HDDNumber=4 ; HDDSize=2TB ; MemoryStartupBytes=1GB; VMProcessorCount=4 ; vTPM=$true}}
 
 #S2D Nodes (nested virt)
-#1..2 | ForEach-Object {$LABConfig.VMs += @{ VMName="S2D$_" ; Configuration='S2D' ; ParentVHD='WinSrvInsiderCore_26063.vhdx' ; HDDNumber=4 ; HDDSize=2TB ; MemoryStartupBytes=8GB ; VMProcessorCount=4 ; vTPM=$true ; NestedVirt=$true}}
+#1..2 | ForEach-Object {$LABConfig.VMs += @{ VMName="S2D$_" ; Configuration='S2D' ; ParentVHD='Win2025Core_G2.vhdx' ; HDDNumber=4 ; HDDSize=2TB ; MemoryStartupBytes=8GB ; VMProcessorCount=4 ; vTPM=$true ; NestedVirt=$true}}
 
 #Management machine
-$LabConfig.VMs += @{ VMName = 'Management' ; ParentVHD = 'WinSrvInsider_26063.vhdx'; MGMTNICs=1 ; AddToolsVHD=$True }
+$LabConfig.VMs += @{ VMName = 'Management' ; ParentVHD = 'Win2025_G2.vhdx'; MGMTNICs=1 ; AddToolsVHD=$True }
 
 #Windows Admin Center in GW mode
-$LabConfig.VMs += @{ VMName = 'WACGW' ; ParentVHD = 'WinSrvInsiderCore_26063.vhdx'; MGMTNICs=1}
+$LabConfig.VMs += @{ VMName = 'WACGW' ; ParentVHD = 'Win2025Core_G2.vhdx'; MGMTNICs=1}
 
 ```
 

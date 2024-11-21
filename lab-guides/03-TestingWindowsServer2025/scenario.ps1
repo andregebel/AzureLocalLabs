@@ -49,7 +49,7 @@
     $ComputersInfo  = Invoke-Command -ComputerName $servers -ScriptBlock {
         Get-ItemProperty -Path $using:RegistryPath
     }
-    $ComputersInfo | Select-Object PSComputerName,CurrentBuildNumber,UBR
+    $ComputersInfo | Select-Object PSComputerName,CurrentBuildNumber,DisplayVersion,UBR
 
     #Update servers
     if ($WindowsUpdate -eq "Recommended"){

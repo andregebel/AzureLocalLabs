@@ -23,6 +23,7 @@ Guides focused at deploying and operation of Azure Stack HCI Clusters
 * [05 Azure Stack HCI 23H2 Lifecycle Manager Deep Dive](lab-guides/05-LifecycleManagerDeepDive/)
 * [06 Expanding Azure Stack HCI](lab-guides/06-ExpandingAzureStackHCI/)
 * [07 Bitlocker Deep Dive](lab-guides/07-BitlockerDeepDive/)
+* [08 Upgrading From 22H2](lab-guides/08-Upgradingfrom22H2/)
 
 ## Tips & Tricks
 

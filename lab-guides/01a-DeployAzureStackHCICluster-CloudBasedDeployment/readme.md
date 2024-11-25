@@ -396,11 +396,11 @@ Foreach ($Server in $Servers){
 
 **Step 5** Populate SBE Package on nodes (Dell AX Nodes)
 
-Note: following is just an example. There might be newer version available https://www.dell.com/support/kbdoc/en-us/000224407 (currently it is [Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip](https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip) and [Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip](https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip)). Most up-to-date version information can be found here: https://aka.ms/AzureStackSBEUpdate/DellEMC
+Note: following is just an example. There might be newer version available https://www.dell.com/support/kbdoc/en-us/000224407 (currently it is [Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip](https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip) and [Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip](https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip)). Most up-to-date version information can be found here: https://aka.ms/AzureStackSBEUpdate/DellEMC
 
 ```PowerShell
         #download SBE
-        Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip
+        Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip
 
         #or 16G
         #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
@@ -408,14 +408,14 @@ Note: following is just an example. There might be newer version available https
         #Transfer to servers
         $Sessions=New-PSSession -ComputerName $Servers -Credential $Credentials
         foreach ($Session in $Session){
-            Copy-Item -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination c:\users\$UserName\downloads\ -ToSession $Session
+            Copy-Item -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination c:\users\$UserName\downloads\ -ToSession $Session
         }
 
         Invoke-Command -ComputerName $Servers -scriptblock {
             #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip
             #unzip to c:\SBE
             New-Item -Path c:\ -Name SBE -ItemType Directory -ErrorAction Ignore
-            Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -DestinationPath C:\SBE
+            Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath C:\SBE
         } -Credential $Credentials
 
         $Sessions | Remove-PSSession
@@ -571,7 +571,28 @@ Invoke-Command -ComputerName $Servers -ScriptBlock {
 
 ```
 
-**Step 5** Configure new admin password on nodes (as Cloud Deployment requires at least 12chars)
+**Step 5** Configure static IP Address (required in 2411)
+
+```PowerShell
+#Convert DHCP address to Static (since 2411 there's a check for static IP)
+Invoke-Command -ComputerName $Servers -ScriptBlock {
+    $InterfaceAlias=(Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -NotLike "169*" -and $_.PrefixOrigin -eq "DHCP"}).InterfaceAlias
+    $IPConf=Get-NetIPConfiguration -InterfaceAlias $InterfaceAlias
+    $IPAddress=Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias $InterfaceAlias
+    $IP=$IPAddress.IPAddress
+    $Index=$IPAddress.InterfaceIndex
+    $GW=$IPConf.IPv4DefaultGateway.NextHop
+    $Prefix=$IPAddress.PrefixLength
+    $DNSServers=@()
+    $ipconf.dnsserver | ForEach-Object {if ($_.addressfamily -eq 2){$DNSServers+=$_.ServerAddresses}}
+    Set-NetIPInterface -InterfaceIndex $Index -Dhcp Disabled
+    New-NetIPAddress -InterfaceIndex $Index -AddressFamily IPv4 -IPAddress $IP -PrefixLength $Prefix -DefaultGateway $GW -ErrorAction SilentlyContinue
+    Set-DnsClientServerAddress -InterfaceIndex $index -ServerAddresses $DNSServers
+} -Credential $Credentials
+ 
+```
+
+**Step 6** Configure new admin password on nodes (as Cloud Deployment requires at least 12chars)
 
 ```PowerShell
 #change password of local admin to be at least 12 chars
@@ -581,7 +602,7 @@ Invoke-Command -ComputerName $Servers -ScriptBlock {
  
 ```
 
-**Step 6** Optional - configure iDRAC IP adresses and make sure passthrough interface is enabled
+**Step 7** Optional - configure iDRAC IP adresses and make sure passthrough interface is enabled
 
 ```PowerShell
 #$iDRACCredentials=Get-Credential #grab iDRAC credentials

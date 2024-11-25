@@ -1,21 +1,11 @@
-## Pull required modules, files...
+### Work in progress ###
+<!-- TOC -->
 
-```PowerShell
+- [Pull required modules, files...](#pull-required-modules-files)
+- [Create some VM in Azure first](#create-some-vm-in-azure-first)
+- [Query VM and create it onprem using AZ](#query-vm-and-create-it-onprem-using-az)
 
-#install powershell modules
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    $ModuleNames="Az.Accounts","Az.Compute","Az.Resources"
-    foreach ($ModuleName in $ModuleNames){
-        if (!(Get-InstalledModule -Name $ModuleName -ErrorAction Ignore)){
-            Install-Module -Name $ModuleName -Force
-        }
-    }
-
-#install AZ
-        Start-BitsTransfer -Source https://aka.ms/installazurecliwindows -Destination $env:userprofile\Downloads\AzureCLI.msi
-        Start-Process msiexec.exe -Wait -ArgumentList "/I  $env:userprofile\Downloads\AzureCLI.msi /quiet"
-        #add az to enviromental variables so no posh restart is needed
-        [System.Environment]::SetEnvironmentVariable('PATH',$Env:PATH+';C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin')
+<!-- /TOC -->Microsoft SDKs\Azure\CLI2\wbin')
 
 
 #login to Azure

@@ -1,4 +1,4 @@
-# Azure Stack HCI Hands-on-lab guides
+# Azure Local Hands-on-lab guides
 
 ## Admin Guides
 
@@ -13,16 +13,17 @@ Guides focused at how to deploy and operate labs
 
 ## Lab guides
 
-Guides focused at deploying and operation of Azure Stack HCI Clusters
+Guides focused at deploying and operation of Azure Local Clusters
 
-* [01a Deploy Azure Stack HCI Cluster 23H2 using Cloud Based Deployment](lab-guides/01a-DeployAzureStackHCICluster-CloudBasedDeployment/)
-* [01b Deploy Azure Stack HCI Cluster 23H2 using new WebUI (preview)](lab-guides/01b-DeployAzureStackHCICluster-WebUI/)
-* [02 Test Azure Stack HCI performance with VMFleet](lab-guides/02-TestPerformanceWithVMFleet/)
+* [01a Deploy Azure Local 23H2 using Cloud Based Deployment](lab-guides/01a-DeployAzureStackHCICluster-CloudBasedDeployment/)
+* [01b Deploy Azure Local 23H2 using new WebUI (preview)](lab-guides/01b-DeployAzureStackHCICluster-WebUI/)
+* [02 Test Azure Local performance with VMFleet](lab-guides/02-TestPerformanceWithVMFleet/)
 * [03 Testing Windows Server 2025 Insider Preview](lab-guides/03-TestingWindowsServerInsider/)
-* [04 Testing Logical Networks in Azure Stack HCI 23H2](lab-guides/04-TestingLogicalNetworks/)
-* [05 Azure Stack HCI 23H2 Lifecycle Manager Deep Dive](lab-guides/05-LifecycleManagerDeepDive/)
-* [06 Expanding Azure Stack HCI](lab-guides/06-ExpandingAzureStackHCI/)
+* [04 Testing Logical Networks in Azure Local 23H2](lab-guides/04-TestingLogicalNetworks/)
+* [05 Azure Local 23H2 Lifecycle Manager Deep Dive](lab-guides/05-LifecycleManagerDeepDive/)
+* [06 Expanding Azure Local](lab-guides/06-ExpandingAzureStackHCI/)
 * [07 Bitlocker Deep Dive](lab-guides/07-BitlockerDeepDive/)
+* [08 Upgrading From 22H2](lab-guides/08-Upgradingfrom22H2/)
 
 ## Tips & Tricks
 
@@ -30,7 +31,7 @@ Guides focused at deploying and operation of Azure Stack HCI Clusters
 * [02 Boot to Network ISO](tips&tricks/02-BootToNetworkISO/)
 * [03 Override IP Adresses in NetATC intent](tips&tricks/03-OverrideIPAddressesinNetATCIntent/)
 * [04 Fix AKS Versions](tips&tricks/04-FixAKSVersions/)
-* [05 Fix Azure Stack HCI Extensions](tips&tricks/05-FixExtensions/)
+* [05 Fix Azure Local Extensions](tips&tricks/05-FixExtensions/)
 * [06 Test Known URLs](tips&tricks/06-TestKnownURLs/)
 * [07 Update Servers](tips&tricks/07-UpdateServers/)
 * [08 Download Dell Drivers for offline use](tips&tricks/08-DellSystemUpdateOffline/)

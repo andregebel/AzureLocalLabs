@@ -17,6 +17,16 @@
     - [Restart Servers to Install Operating system](#restart-servers-to-install-operating-system)
         - [Expected result](#expected-result)
 
+<!-- /TOC -->ure servers to boot from correct NIC](#configure-servers-to-boot-from-correct-nic)
+    - [Restart Physical servers to attempt boot and collect information from logs](#restart-physical-servers-to-attempt-boot-and-collect-information-from-logs)
+        - [Expected result](#expected-result)
+        - [Expected result](#expected-result)
+    - [Configure WDS to answer all clients](#configure-wds-to-answer-all-clients)
+    - [Configure MDT Database](#configure-mdt-database)
+        - [Expected result](#expected-result)
+    - [Restart Servers to Install Operating system](#restart-servers-to-install-operating-system)
+        - [Expected result](#expected-result)
+
 <!-- /TOC -->
 
 ## Prerequisites
@@ -54,11 +64,11 @@
 ```PowerShell
 $LabConfig=@{SwitchNics="NIC1","NIC2"; Internet=$true ; UseHostDnsAsForwarder=$true; DomainAdminName='LabAdmin'; AdminPassword='LS1setup!' ; DCEdition='4' ;VMs=@()}
 
-$LabConfig.VMs += @{ VMName = 'Management' ; ParentVHD = 'Win2022_G2.vhdx' ; MGMTNICs=1 }
+$LabConfig.VMs += @{ VMName = 'Management' ; ParentVHD = 'Win2025_G2.vhdx' ; MGMTNICs=1 }
 
 $LabConfig.VMs += @{ VMName = 'MDT' ; Configuration = 'S2D' ; ParentVHD = 'Win2022_G2.vhdx' ; SSDNumber = 1; SSDSize=1TB ; MGMTNICs=1 }
 
-$LabConfig.VMs += @{ VMName = 'WACGW' ; ParentVHD = 'Win2022Core_G2.vhdx' ; MGMTNICs=1 }
+$LabConfig.VMs += @{ VMName = 'WACGW' ; ParentVHD = 'Win2025Core_G2.vhdx' ; MGMTNICs=1 }
  
 ```
 

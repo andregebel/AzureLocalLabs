@@ -1,5 +1,4 @@
 # Admin Lab 02 - Working with MSLab
-
 <!-- TOC -->
 
 - [Admin Lab 02 - Working with MSLab](#admin-lab-02---working-with-mslab)
@@ -14,6 +13,8 @@
     - [Explore the lab](#explore-the-lab)
         - [Expected result](#expected-result)
     - [Cleaning lab](#cleaning-lab)
+
+<!-- /TOC -->ng lab](#cleaning-lab)
 
 <!-- /TOC -->
 
@@ -33,7 +34,7 @@ Before deploying lab, you should review what is in the labconfig. Let's start wi
 $LabConfig=@{ 
 DomainAdminName='LabAdmin'; AdminPassword='LS1setup!' ; VMs=@()}
 
-1..2 | ForEach-Object {$VMNames="AzSHCI"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI21H2_G2.vhdx'; HDDNumber = 4; HDDSize= 4TB ; MemoryStartupBytes= 1GB }}
+1..2 | ForEach-Object {$VMNames="AzSHCI"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI23H2_G2.vhdx'; HDDNumber = 4; HDDSize= 4TB ; MemoryStartupBytes= 1GB }}
  
 ```
 
@@ -70,7 +71,7 @@ To connect lab to internet you need to specify this in LabConfig.ps1 by adding o
 ```PowerShell
 $LabConfig=@{ Internet=$true; DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; VMs=@()}
 
-1..2 | ForEach-Object {$VMNames="AzSHCI"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI21H2_G2.vhdx'; HDDNumber = 4; HDDSize= 4TB ; MemoryStartupBytes= 1GB }}
+1..2 | ForEach-Object {$VMNames="AzSHCI"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI23H2_G2.vhdx'; HDDNumber = 4; HDDSize= 4TB ; MemoryStartupBytes= 1GB }}
  
 ```
 
@@ -93,7 +94,7 @@ To add more VMs you can simply edit LabConfig.ps1 and add more records into $Lab
 ```PowerShell
 $LabConfig=@{ Internet=$true; DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; VMs=@()}
 
-1..4 | ForEach-Object {$VMNames="AzSHCI"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI21H2_G2.vhdx'; HDDNumber = 4; HDDSize= 4TB ; MemoryStartupBytes= 1GB }}
+1..4 | ForEach-Object {$VMNames="AzSHCI"; $LABConfig.VMs += @{ VMName = "$VMNames$_" ; Configuration = 'S2D' ; ParentVHD = 'AzSHCI23H2_G2.vhdx'; HDDNumber = 4; HDDSize= 4TB ; MemoryStartupBytes= 1GB }}
 
 $LabConfig.VMs += @{ VMName = 'Management' ; ParentVHD = 'Win2022_G2.vhdx' ; MGMTNICs=1 }
 

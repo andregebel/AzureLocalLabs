@@ -333,7 +333,7 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value $($TrustedHosts -join ',') 
 
 #region populate SBE package
     #download SBE
-    Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip
+    Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip
 
     #or 16G
     #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
@@ -341,14 +341,15 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value $($TrustedHosts -join ',') 
     #Transfer to servers
     $Sessions=New-PSSession -ComputerName $Servers -Credential $Credentials
     foreach ($Session in $Session){
-        Copy-Item -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination c:\users\$UserName\downloads\ -ToSession $Session
+        Copy-Item -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination c:\users\$UserName\downloads\ -ToSession $Session
     }
 
     Invoke-Command -ComputerName $Servers -scriptblock {
         #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip
         #unzip to c:\SBE
         New-Item -Path c:\ -Name SBE -ItemType Directory -ErrorAction Ignore
-        Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -DestinationPath C:\SBE
+        Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath C:\SBE -Force
+        #Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath C:\SBE -Force
     } -Credential $Credentials
 
     $Sessions | Remove-PSSession
@@ -384,6 +385,23 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value $($TrustedHosts -join ',') 
     #check if source is NTP Server
     Invoke-Command -ComputerName $servers -ScriptBlock {
         w32tm /query /source
+    } -Credential $Credentials
+#endregion
+
+#region Convert DHCP address to Static (since 2411 there's a check for static IP)
+    Invoke-Command -ComputerName $Servers -ScriptBlock {
+        $InterfaceAlias=(Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -NotLike "169*" -and $_.PrefixOrigin -eq "DHCP"}).InterfaceAlias
+        $IPConf=Get-NetIPConfiguration -InterfaceAlias $InterfaceAlias
+        $IPAddress=Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias $InterfaceAlias
+        $IP=$IPAddress.IPAddress
+        $Index=$IPAddress.InterfaceIndex
+        $GW=$IPConf.IPv4DefaultGateway.NextHop
+        $Prefix=$IPAddress.PrefixLength
+        $DNSServers=@()
+        $ipconf.dnsserver | ForEach-Object {if ($_.addressfamily -eq 2){$DNSServers+=$_.ServerAddresses}}
+        Set-NetIPInterface -InterfaceIndex $Index -Dhcp Disabled
+        New-NetIPAddress -InterfaceIndex $Index -AddressFamily IPv4 -IPAddress $IP -PrefixLength $Prefix -DefaultGateway $GW -ErrorAction SilentlyContinue
+        Set-DnsClientServerAddress -InterfaceIndex $index -ServerAddresses $DNSServers
     } -Credential $Credentials
 #endregion
 

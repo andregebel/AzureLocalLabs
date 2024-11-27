@@ -96,7 +96,9 @@ Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell
 #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
 
 #expand archive
-Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath $env:userprofile\Downloads\SBE
+Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
+#Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
+
 
 #(optional) replace metadata file with latest metadata from SBEUpdate address
 #Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFIle $env:userprofile\Downloads\SBE\SBE_Discovery_Dell.xml

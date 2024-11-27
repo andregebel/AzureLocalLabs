@@ -1,9 +1,26 @@
-## About the lab
+# Upgrading from Azure Local 22H2
 
-In this lab you will learn how to upgrade Azure Local from versinon 22H2 to 23H2.
+<!-- TOC -->
 
-This lab assumes the most challenging approach - CAU upgrade not working (as I was not able to make it work anyway), NetATC not present (there is more complex process to make sure all VMs are running)
+- [Upgrading from Azure Local 22H2](#upgrading-from-azure-local-22h2)
+    - [Prerequisites](#prerequisites)
+    - [Download ISO for parent disk](#download-iso-for-parent-disk)
+    - [Labconfig](#labconfig)
+    - [Install 22H2 cluster without NetATC](#install-22h2-cluster-without-netatc)
+    - [Upgrade OS using CAU might not work](#upgrade-os-using-cau-might-not-work)
+    - [Upgrade OS using media](#upgrade-os-using-media)
+        - [Download 23H2 media first](#download-23h2-media-first)
+        - [Mount image and copy to nodes](#mount-image-and-copy-to-nodes)
+        - [Update nodes using media](#update-nodes-using-media)
+        - [Update Cluster and Storage Pool versions](#update-cluster-and-storage-pool-versions)
+    - [Migrate networking to NetworkATC](#migrate-networking-to-networkatc)
+    - [Remove NetATC IP Addresses](#remove-netatc-ip-addresses)
+    - [Validate Solution upgrade readiness](#validate-solution-upgrade-readiness)
+    - [Apply solution upgrade](#apply-solution-upgrade)
+        - [First some prerequisites - Prepare Active Directory](#first-some-prerequisites---prepare-active-directory)
+        - [Enforce sync so Azure will see 23H2](#enforce-sync-so-azure-will-see-23h2)
 
+<!-- /TOC -->
 You will learn how to upgrade OS from install media, how to transition from traditional networking to NetworkATC while keeping all VMs up and running and how to onboard cluster to modern Lifecycle Management (23H2)
 
 
@@ -184,7 +201,10 @@ Note: drain will fail in Virtual environment as VMs for some reason recognize di
     $ClusterName="ASClus01"
     $Servers=(Get-ClusterNode -Cluster $ClusterName).Name
 
-    #first you need to suspend node
+    #for some reason VMs wont live migrate from 23H2 to 22H2 in virtual environment ("incompatible cpu"), so we'll simply shut down all VMs
+    #since VMs are blank, we'll turn it off (like unplugging powercord)
+    Stop-VM -VMName * -CimSession $Servers -TurnOff
+
     foreach ($Server in $Servers){
         #make sure there are no jobs
         do{
@@ -221,33 +241,33 @@ Note: drain will fail in Virtual environment as VMs for some reason recognize di
         }else{
             #proceed with suspending one node
             Suspend-ClusterNode -Name $Server -Cluster $ClusterName -Drain -Wait
-        }
-
-        #initiate update
-        Invoke-Command -ComputerName $Server -ScriptBlock {
-            Start-Process -FilePath c:\temp\23H2\Setup.exe -ArgumentList "/auto upgrade /EULA Accept /DynamicUpdate disable" -WorkingDirectory c:\Temp\23H2\ -Wait
-        }
-
-        #now wait for computer to boot and check if version is 23H2
-        Start-Sleep 10
-        do{$Test= Test-NetConnection -ComputerName $Server -CommonTCPPort WINRM}while ($test.TcpTestSucceeded -eq $False)
-        #check if computer is 23H2 already
-        do{
-            Start-Sleep 5
-            $ComputerInfo  = Invoke-Command -ComputerName $server -ScriptBlock {
-                Get-ItemProperty -Path $using:RegistryPath
-                $ComputerInfo | Select-Object PSComputerName,CurrentBuildNumber,DisplayVersion,UBR
+            #initiate update
+            Invoke-Command -ComputerName $Server -ScriptBlock {
+                Start-Process -FilePath c:\temp\23H2\Setup.exe -ArgumentList "/auto upgrade /EULA Accept /DynamicUpdate disable" -WorkingDirectory c:\Temp\23H2\ -Wait
             }
-        }while ($ComputerInfo.DisplayVersion -ne "23H2")
 
-        #check if install is finished
-        do{
-            Start-Sleep 5
-            $Windeploy=Invoke-Command -ComputerName $Server -ScriptBlock {get-process windeploy -ErrorAction Ignore}
-        }while ($Windeploy -ne $Null)
+            #now wait for computer to boot and check if version is 23H2
+            Start-Sleep 10
+            do{$Test= Test-NetConnection -ComputerName $Server -CommonTCPPort WINRM}while ($test.TcpTestSucceeded -eq $False)
 
-        #now you can resume node
-        Resume-ClusterNode -Name $Server -Cluster $ClusterName
+            #check if computer is 23H2 already
+            do{
+                Start-Sleep 5
+                $ComputerInfo  = Invoke-Command -ComputerName $server -ScriptBlock {
+                    Get-ItemProperty -Path $using:RegistryPath
+                    $ComputerInfo | Select-Object PSComputerName,CurrentBuildNumber,DisplayVersion,UBR
+                }
+            }while ($ComputerInfo.DisplayVersion -ne "23H2")
+
+            #check if install is finished
+            do{
+                Start-Sleep 5
+                $Windeploy=Invoke-Command -ComputerName $Server -ScriptBlock {get-process windeploy -ErrorAction Ignore}
+            }while ($Windeploy -ne $Null)
+
+            #now you can resume node
+            Resume-ClusterNode -Name $Server -Cluster $ClusterName
+        }
     }
 
 ```
@@ -265,12 +285,15 @@ You can now check versions
 
 ```
 
+![](./media/powershell03.png)
+
 ### Update Cluster and Storage Pool versions
 
 ```PowerShell
     $ClusterName="ASClus01"
     Update-ClusterFunctionalLevel -Cluster $ClusterName -Force
     Get-StoragePool -CimSession $ClusterName -IsPrimordial $False | Update-StoragePool -Confirm:0
+
 ```
 
 ## Migrate networking to NetworkATC
@@ -317,59 +340,106 @@ Since renaming vSwitch when VMs are connected to that vSwitch is breaking operat
 
 #first you need to suspend node, then remove vswitch (this will break SBL, that's why you need to suspend)
     foreach ($Server in $Servers){
-        Suspend-ClusterNode -Name $Server -Cluster $ClusterName -Drain -Wait
-        
-        #in this case, removing vmswitch will return first pNIC it's configuration, so node will keep running
-        Remove-VMSwitch -CimSession $Server -Name $vSwitchName -Force
-
-        #remove all QoS
-        Invoke-Command -ComputerName $Server -ScriptBlock {
-            Get-NetQosTrafficClass | Remove-NetQosTrafficClass
-            Get-NetQosPolicy | Remove-NetQosPolicy -Confirm:$false
-            Get-NetQosFlowControl | Disable-NetQosFlowControl
+        #make sure there are no jobs
+        do{
+            $jobs=(Get-StorageSubSystem -CimSession $ClusterName -FriendlyName Clus* | Get-StorageJob -CimSession $ClusterName)
+            if ($jobs | Where-Object Name -eq Repair){
+                $count=($jobs | Measure-Object).count
+                $BytesTotal=($jobs | Measure-Object BytesTotal -Sum).Sum
+                $BytesProcessed=($jobs | Measure-Object BytesProcessed -Sum).Sum
+                [System.Console]::Write("$count Repair Storage Job(s) Running. GBytes Processed: $($BytesProcessed/1GB) GBytes Total: $($BytesTotal/1GB)               `r")
+                #Check for Suspended jobs (if there are no running repair jobs, only suspended and still unhealthy disks). Kick the repair with Repair-Virtual disk if so... 
+                if ((($jobs | where-Object Name -eq Repair | where-Object JobState -eq "Running") -eq $Null) -and ($jobs | where-Object Name -eq Repair | where-Object JobState -eq "Suspended") -and (Get-VirtualDisk -CimSession $ClusterName | where healthstatus -ne Healthy)){
+                    Write-Output "Suspended repair job and Degraded virtual disk found. Invoking Virtual Disk repair"
+                    Get-VirtualDisk -CimSession $ClusterName | where-Object HealthStatus -ne "Healthy" | Repair-VirtualDisk
+                }
+                Start-Sleep 5
+            }
+        }until (($jobs | Where-Object Name -eq Repair) -eq $null)
+        #Check if all disks are healthy. Wait if not
+        Write-Output "$(get-date -Format 'yyyy/MM/dd hh:mm:ss tt') $($Node): Checking if all disks are healthy"
+        if (Get-VirtualDisk -CimSession $ClusterName | Where-Object HealthStatus -ne "Healthy"){
+            Write-Output "$(get-date -Format 'yyyy/MM/dd hh:mm:ss tt') $($Node): Waiting for virtual disks to become healthy"
+            do{Start-Sleep 5}while(Get-VirtualDisk -CimSession $ClusterName | Where-Object HealthStatus -ne "Healthy")
+        }
+        #Check if all fault domains are healthy. Wait if not
+        Write-Output "$(get-date -Format 'yyyy/MM/dd hh:mm:ss tt') $($Node): Checking if all fault domains are healthy"
+        if (Get-StorageFaultDomain -CimSession $ClusterName | Where-Object HealthStatus -ne "Healthy"){
+            Write-Output "$(get-date -Format 'yyyy/MM/dd hh:mm:ss tt') $($Node): Waiting for fault domains to become healthy"
+            do{Start-Sleep 5}while(Get-StorageFaultDomain -CimSession $ClusterName | Where-Object HealthStatus -ne "Healthy")
         }
 
-        #start NetATC
-        Invoke-Command -ComputerName $Server -ScriptBlock {
-            Set-Service -Name NetworkATC -StartupType Automatic
-            Start-Service -Name NetworkATC
+        #make sure all nodes are up before suspending node
+        if (Get-ClusterNode -Cluster $ClusterName | Where-Object State -ne up){
+            Write-Output "Some nodes are not up. Skipping updates"
+        }else{
+            Suspend-ClusterNode -Name $Server -Cluster $ClusterName -Drain -Wait
+            
+            #in this case, removing vmswitch will return first pNIC it's configuration, so node will keep running
+            Remove-VMSwitch -CimSession $Server -Name $vSwitchName -Force
+
+            #remove all QoS
+            Invoke-Command -ComputerName $Server -ScriptBlock {
+                Get-NetQosTrafficClass | Remove-NetQosTrafficClass
+                Get-NetQosPolicy | Remove-NetQosPolicy -Confirm:$false
+                Get-NetQosFlowControl | Disable-NetQosFlowControl
+            }
+
+            #start NetATC
+            Invoke-Command -ComputerName $Server -ScriptBlock {
+                Set-Service -Name NetworkATC -StartupType Automatic
+                Start-Service -Name NetworkATC
+            }
+
+            #check Intent Status and wait for it to finish
+            do{Start-Sleep 5}while((Get-NetIntentStatus -ClusterName $ClusterName | Where-Object Host -eq $Server).ConfigurationStatus -ne "Success")
+
+            #configure IP Address
+            Get-NetAdapter -CimSession $Server -Name "vSMB(*#$($pNicNames[0]))" | New-NetIPAddress -IPAddress ($StorNet1+$Stornet1StartIP.ToString()) -PrefixLength 24
+            $Stornet1StartIP++
+
+            #now you can create vswitch from second NIC so you can live migrate VMs
+            New-VMSwitch -CimSession $Server -Name $vSwitchName -AllowManagementOS $false -NetAdapterName $pNICNames[1]
+
+            #and resume cluster node
+            Resume-ClusterNode -Name $Server -Cluster $ClusterName
         }
-
-        #check Intent Status and wait for it to finish
-        do{Start-Sleep 5}while(Get-NetIntentStatus -ClusterName $ClusterName | Where-Object Host -eq $Server | Where ConfigurationStatus -ne Success)
-
-        #configure IP Address
-        Get-NetAdapter -CimSession $Server -Name "vSMB(*#$($pNicNames[0]))" | New-NetIPAddress -IPAddress ($StorNet1+$Stornet1StartIP.ToString()) -PrefixLength 24
-        $Stornet1StartIP++
-
-        #now you can create vswitch from second NIC so you can live migrate VMs
-        New-VMSwitch -CimSession $Server -Name $vSwitchName -AllowManagementOS $false -NetAdapterName $pNICNames[1]
-
-        #and resume cluster node
-        Resume-ClusterNode -Name $Server -Cluster $ClusterName
     }
 
 #now you can connect all vNICs to new vSwitch
 Get-VMNetworkAdapter -CimSession $Servers -VMName * | Connect-VMNetworkAdapter -SwitchName "ConvergedSwitch(compute_management_storage)"
+Start-Sleep 5
 
 #and once VMs are connected to new switch, old switch can be removed
 Remove-VMSwitch -CimSession $Servers -Name $vSwitchName -Force
 
-#and now the intent can be modified with both VLANs
+#and now the intent can be modified with both physical NICs and both VLANs
 Remove-NetIntent -Name compute_management_storage -ClusterName $ClusterName
 Add-NetIntent -ClusterName $ClusterName -Name compute_management_storage -Compute -Management -Storage -AdapterName $pNICNames -AdapterPropertyOverrides $AdapterOverride -StorageVlans $StorageVLANs -StorageOverrides $StorageOverrides -Verbose
 
 #wait for intent to finish
-do{Start-Sleep 5}while(Get-NetIntentStatus -ClusterName $ClusterName | Where ConfigurationStatus -ne Success)
+do{Start-Sleep 5}while((Get-NetIntentStatus -ClusterName $ClusterName).ConfigurationStatus -contains "Provisioning")
 
 #and configure static IP for second storage adapter
 foreach ($Server in $Servers){
-        Get-NetAdapter -CimSession $Server -Name "vSMB(*#$($pNicNames[1]))" | New-NetIPAddress -IPAddress ($StorNet2+$Stornet1StartIP.ToString()) -PrefixLength 24
+        Get-NetAdapter -CimSession $Server -Name "vSMB(*#$($pNicNames[1]))" | New-NetIPAddress -IPAddress ($StorNet2+$Stornet2StartIP.ToString()) -PrefixLength 24
         $Stornet2StartIP++
 }
 
 ```
 
+## Remove NetATC IP Addresses
+
+For some reason 10.71.1.x and 10.71.2.x IP addresses were configured even we configured EnableAutomaticIPGeneration to be false. Let's remove it
+
+```PowerShell
+Get-NetIPAddress -CimSession $Servers -IPAddress "10.71.*" | Remove-NetIPAddress -Confirm:0
+ 
+```
+
+As result, you will have your cluster with all networks managed with NetATC
+
+![](./media/cluadmin02.png)
 
 ## Validate Solution upgrade readiness
 
@@ -465,6 +535,14 @@ Invoke-Command -ComputerName $servers -ScriptBlock {
 
 ```
 
+Failed test - missing features
+
+![](./media/powershell04.png)
+
+Successful test - features installed
+
+![](./media/powershell05.png)
+
 ## Apply solution upgrade
 
 https://learn.microsoft.com/en-us/azure/azure-local/upgrade/install-solution-upgrade
@@ -478,6 +556,8 @@ $LCMPassword="LS1setup!LS1setup!"
 $SecuredPassword = ConvertTo-SecureString $LCMPassword -AsPlainText -Force
 $LCMCredentials= New-Object System.Management.Automation.PSCredential ($LCMUserName,$SecuredPassword)
 
+$ClusterName="ASClus01"
+
 #install posh module for prestaging Active Directory
 Install-PackageProvider -Name NuGet -Force
 Install-Module AsHciADArtifactsPreCreationTool -Repository PSGallery -Force
@@ -487,6 +567,13 @@ Install-WindowsFeature -Name RSAT-AD-PowerShell,GPMC
 
 #populate objects
 New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $LCMCredentials -AsHciOUName $AsHCIOUName
+
+#move computer objects to new OU
+$Servers=(Get-ClusterNode -Cluster $ClusterName).Name
+Get-ADObject -Filter "name -eq `'$ClusterName`' -and objectclass -eq 'computer'" | Move-ADObject -TargetPath $AsHCIOUName
+Foreach ($Server in $Servers){
+    Get-ADObject -Filter "name -eq `'$Server`'" | Move-ADObject -TargetPath $AsHCIOUName
+}
 
 ```
 
@@ -499,3 +586,12 @@ Invoke-Command -ComputerName $ClusterName -ScriptBlock {
 
 
 ```
+
+Before
+
+![](./media/edge02.png)
+
+
+After
+
+![](./media/edge03.png)

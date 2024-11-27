@@ -348,7 +348,8 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value $($TrustedHosts -join ',') 
         #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip
         #unzip to c:\SBE
         New-Item -Path c:\ -Name SBE -ItemType Directory -ErrorAction Ignore
-        Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath C:\SBE
+        Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath C:\SBE -Force
+        #Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath C:\SBE -Force
     } -Credential $Credentials
 
     $Sessions | Remove-PSSession

@@ -3,6 +3,7 @@
 <!-- TOC -->
 
 - [Upgrading from Azure Local 22H2](#upgrading-from-azure-local-22h2)
+    - [About the lab](#about-the-lab)
     - [Prerequisites](#prerequisites)
     - [Download ISO for parent disk](#download-iso-for-parent-disk)
     - [Labconfig](#labconfig)
@@ -19,10 +20,17 @@
     - [Apply solution upgrade](#apply-solution-upgrade)
         - [First some prerequisites - Prepare Active Directory](#first-some-prerequisites---prepare-active-directory)
         - [Enforce sync so Azure will see 23H2](#enforce-sync-so-azure-will-see-23h2)
+        - [Perform Azure Onboard TBD: Option is not available in portal](#perform-azure-onboard-tbd-option-is-not-available-in-portal)
 
 <!-- /TOC -->
-You will learn how to upgrade OS from install media, how to transition from traditional networking to NetworkATC while keeping all VMs up and running and how to onboard cluster to modern Lifecycle Management (23H2)
 
+
+## About the lab
+In this lab you will learn how to upgrade Azure Local from versinon 22H2 to 23H2.
+
+This lab assumes the most challenging approach - CAU upgrade not working (as I was not able to make it work anyway), NetATC not present (there is more complex process to make sure all VMs are running)
+
+You will learn how to upgrade OS from install media, how to transition from traditional networking to NetworkATC while keeping all VMs up and running and how to onboard cluster to modern Lifecycle Management (23H2)
 
 ## Prerequisites
 
@@ -595,3 +603,6 @@ Before
 After
 
 ![](./media/edge03.png)
+
+
+### Perform Azure Onboard (TBD: Option is not available in portal)

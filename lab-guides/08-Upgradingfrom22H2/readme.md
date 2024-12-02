@@ -423,6 +423,12 @@ Remove-VMSwitch -CimSession $Servers -Name $vSwitchName -Force
 
 #and now the intent can be modified with both physical NICs and both VLANs
 Remove-NetIntent -Name compute_management_storage -ClusterName $ClusterName
+#virtual environment (skipping RDMA config)
+$AdapterOverride = New-NetIntentAdapterPropertyOverrides
+$AdapterOverride.NetworkDirect = 0
+#Disable Automatic IPs (assuming subnets were manually set)
+$StorageOverride =New-NetIntentStorageOverrides
+$StorageOverride.EnableAutomaticIPGeneration=$False
 Add-NetIntent -ClusterName $ClusterName -Name compute_management_storage -Compute -Management -Storage -AdapterName $pNICNames -AdapterPropertyOverrides $AdapterOverride -StorageVlans $StorageVLANs -StorageOverrides $StorageOverrides -Verbose
 
 #wait for intent to finish

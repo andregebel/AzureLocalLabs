@@ -12,6 +12,7 @@
     - [Display cluster information](#display-cluster-information)
     - [Explore Action Plans](#explore-action-plans)
 - [Deleting failed Action Plans](#deleting-failed-action-plans)
+- [Troubleshooting "HasPrerequisite" issue](#troubleshooting-hasprerequisite-issue)
 
 <!-- /TOC -->
 
@@ -321,4 +322,55 @@ Invoke-Command -ComputerName $ClusterName -ScriptBlock {
         }
     }
 }
+```
+
+# Troubleshooting "HasPrerequisite" issue
+
+On several occasions I saw an issue with update, where it complained about "HasPrerequisite" as per below screenshot.
+
+![](./media/powershell16.png)
+
+To fix, simply cleanup packages from cluster and use fresh metadata xml directly from https://aka.ms/AzureStackSBEUpdate/DellEMC
+
+```PowerShell
+$ClusterName="AXClus02"
+
+#cleanup packages
+Invoke-Command -ComputerName $ClusterName -ScriptBlock {
+    #remove package(s)
+    Remove-Item -Path C:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\Updates\Packages\*.* -Recurse
+    #remove sideload folder content
+    Remove-Item -Path C:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\sideload\*.* -Recurse
+}
+#cleanup downloaded packages
+Remove-Item -Path $env:userprofile\Downloads\SBE\*.* -Recurse
+
+#download SBE
+Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip
+
+#or 16G
+#Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
+
+#expand archive
+Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
+#Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
+
+#replace metadata file with latest metadata from SBEUpdate address
+Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFIle $env:userprofile\Downloads\SBE\SBE_Discovery_Dell.xml
+
+#transfer into the cluster
+New-Item -Path "\\$ClusterName\ClusterStorage$\Infrastructure_1\Shares\SU1_Infrastructure_1" -Name sideload -ItemType Directory -ErrorAction Ignore
+Copy-Item -Path $env:userprofile\Downloads\SBE\*.* -Destination "\\$ClusterName\ClusterStorage$\Infrastructure_1\Shares\SU1_Infrastructure_1\sideload"
+
+#add solution update
+Invoke-Command -ComputerName $Cluster -ScriptBlock {
+    Add-SolutionUpdate -SourceFolder C:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\sideload
+    Get-SolutionUpdate | Format-Table DisplayName, Version, State
+}
+
+#start solution update
+Invoke-Command -ComputerName $ClusterName -ScriptBlock {
+    Get-SolutionUpdate | Start-SolutionUpdate
+}
+ 
 ```

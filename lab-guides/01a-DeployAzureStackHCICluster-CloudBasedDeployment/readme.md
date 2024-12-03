@@ -447,9 +447,6 @@ Invoke-Command -computername $Servers -scriptblock {
 
 > To push ARC agent, new PowerShell module AzSHCI.ArcInstaller is required. Az.Resources and Az.Accounts modules are then used by arcinstaller configure RBAC on azure resources.
 
-> note: ARC requires specific version of modules https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deployment-arc-register-server-permissions?tabs=powershell#register-servers-with-azure-arc
-
-
 ```PowerShell
 #make sure nuget is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
@@ -463,17 +460,17 @@ Invoke-Command -ComputerName $Servers -ScriptBlock {
 
 #make sure Az.Resources module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name Az.Resources -RequiredVersion 6.12.0 -Force
+    Install-Module -Name Az.Resources -Force
 } -Credential $Credentials
 
 #make sure az.accounts module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name az.accounts -RequiredVersion 3.0.0 -Force
+    Install-Module -Name az.accounts -Force
 } -Credential $Credentials
 
 #make sure az.accounts module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name Az.ConnectedMachine -RequiredVersion 0.8.0 -Force
+    Install-Module -Name Az.ConnectedMachine -Force
 } -Credential $Credentials
 
 ```

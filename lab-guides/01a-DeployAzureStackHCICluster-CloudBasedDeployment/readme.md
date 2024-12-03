@@ -14,7 +14,6 @@
     - [Task05 - Monitor Deployment Progress](#task05---monitor-deployment-progress)
 
 <!-- /TOC -->
-<!-- /TOC -->
 
 ## About the lab
 
@@ -419,6 +418,14 @@ Note: following is just an example. There might be newer version available https
             #Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath C:\SBE -Force
         } -Credential $Credentials
 
+        #populate latest metadata file
+            #download
+            Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFile $env:userprofile\Downloads\SBE_Discovery_Dell.xml
+            #copy to servers
+            foreach ($Session in $Session){
+                Copy-Item -Path $env:userprofile\Downloads\SBE_Discovery_Dell.xml -Destination C:\SBE -ToSession $Session
+            }
+
         $Sessions | Remove-PSSession
  
 ```
@@ -440,9 +447,6 @@ Invoke-Command -computername $Servers -scriptblock {
 
 > To push ARC agent, new PowerShell module AzSHCI.ArcInstaller is required. Az.Resources and Az.Accounts modules are then used by arcinstaller configure RBAC on azure resources.
 
-> note: ARC requires specific version of modules https://learn.microsoft.com/en-us/azure-stack/hci/deploy/deployment-arc-register-server-permissions?tabs=powershell#register-servers-with-azure-arc
-
-
 ```PowerShell
 #make sure nuget is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
@@ -456,17 +460,17 @@ Invoke-Command -ComputerName $Servers -ScriptBlock {
 
 #make sure Az.Resources module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name Az.Resources -RequiredVersion 6.12.0 -Force
+    Install-Module -Name Az.Resources -Force
 } -Credential $Credentials
 
 #make sure az.accounts module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name az.accounts -RequiredVersion 3.0.0 -Force
+    Install-Module -Name az.accounts -Force
 } -Credential $Credentials
 
 #make sure az.accounts module is installed on nodes
 Invoke-Command -ComputerName $Servers -ScriptBlock {
-    Install-Module -Name Az.ConnectedMachine -RequiredVersion 0.8.0 -Force
+    Install-Module -Name Az.ConnectedMachine -Force
 } -Credential $Credentials
 
 ```

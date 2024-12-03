@@ -352,6 +352,14 @@ Set-Item WSMan:\localhost\Client\TrustedHosts -Value $($TrustedHosts -join ',') 
         #Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath C:\SBE -Force
     } -Credential $Credentials
 
+    #populate latest metadata file
+        #download
+        Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFile $env:userprofile\Downloads\SBE_Discovery_Dell.xml
+        #copy to servers
+        foreach ($Session in $Session){
+            Copy-Item -Path $env:userprofile\Downloads\SBE_Discovery_Dell.xml -Destination C:\SBE -ToSession $Session
+        }
+
     $Sessions | Remove-PSSession
 #endregion
 

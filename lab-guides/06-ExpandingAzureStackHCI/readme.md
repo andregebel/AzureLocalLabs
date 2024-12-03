@@ -324,15 +324,7 @@ Invoke-Command -ComputerName $Servers -ScriptBlock {
 
     #Configure NTP Server
     Invoke-Command -ComputerName $servers -ScriptBlock {
-     <!-- TOC -->
-
-- [Expanding Azure Stack HCI](#expanding-azure-stack-hci)
-    - [About the lab](#about-the-lab)
-    - [Prepare server](#prepare-server)
-    - [Add server](#add-server)
-    - [Synchronize changes with Azure](#synchronize-changes-with-azure)
-
-<!-- /TOC -->   w32tm /config /manualpeerlist:$using:NTPServer /syncfromflags:manual /update
+        w32tm /config /manualpeerlist:$using:NTPServer /syncfromflags:manual /update
         Restart-Service w32time
     } -Credential $Credentials
 

@@ -36,6 +36,8 @@ Guides focused at deploying and operation of Azure Local Clusters
 * [07 Update Servers](tips&tricks/07-UpdateServers/)
 * [08 Download Dell Drivers for offline use](tips&tricks/08-DellSystemUpdateOffline/)
 * [09 Pulling image from Azure](tips&tricks/09-PullingImageFromAzure/)
+* [10 Connecting to Azure Resource Bridge](tips&tricks/10-ConnectingToARB/)
+* [11 CredSSP in Windows Server 2025](tips&tricks/11-WS2025CredSSP/)
 
 ## Deprecated labs
 

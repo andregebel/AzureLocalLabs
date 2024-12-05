@@ -363,7 +363,7 @@ New-Item -Path "\\$ClusterName\ClusterStorage$\Infrastructure_1\Shares\SU1_Infra
 Copy-Item -Path $env:userprofile\Downloads\SBE\*.* -Destination "\\$ClusterName\ClusterStorage$\Infrastructure_1\Shares\SU1_Infrastructure_1\sideload"
 
 #add solution update
-Invoke-Command -ComputerName $Cluster -ScriptBlock {
+Invoke-Command -ComputerName $ClusterName -ScriptBlock {
     Add-SolutionUpdate -SourceFolder C:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\sideload
     Get-SolutionUpdate | Format-Table DisplayName, Version, State
 }

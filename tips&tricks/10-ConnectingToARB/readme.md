@@ -163,7 +163,7 @@ after
 
     Enter-PSSession -ComputerName $ClusterName -Credential $Credentials -Authentication Credssp
         $yaml="c:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\MocArb\WorkingDirectory\Appliance\hci-appliance.yaml"
-        $kubeconfig="c:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\MocArb\WorkingDirectory\Appliance\kubeconfig"
+        $kubeconfig="c:\ClusterStorage\Infrastructure_1\Shares\SU1_Infrastructure_1\MocArb\WorkingDirectory\Appliance\Kva\kubeconfig"
         #login with device authentication
         az login --use-device-code
 
@@ -174,10 +174,9 @@ after
         #prepare appliance
         az arcappliance prepare hci --config-file $yaml
         #deploy
-        az arcappliance deploy hci --config-file $yaml
+        az arcappliance deploy hci --config-file $yaml --outfile $kubeconfig
 
-        #connect appliance
-        
+        #create (this fails :( )
         az arcappliance create hci --config-file $yaml --kubeconfig $kubeconfig
 
     exit

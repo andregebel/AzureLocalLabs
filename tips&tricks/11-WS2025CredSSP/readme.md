@@ -2,7 +2,8 @@ First you need to configure local machine to trust remote machines and remote ma
 
 ```PowerShell
     $ClusterName="AXClus02"
-    $CredSSPServers=(Get-ClusterNode -Cluster $ClusterName).Name,$ClusterName
+    $CredSSPServers=(Get-ClusterNode -Cluster $ClusterName).Name
+    $CredSSPServers+=$ClusterName
 
     #Configure CredSSP First
         #since just Enable-WSMANCredSSP no longer works in WS2025, let's configure it via registry

@@ -21,6 +21,9 @@ az login --use-device-code
 #add custom location extension
 az extension add --name customlocation
 
+#add aksarc extension
+az extension add --name aksarc
+
 #Grab CustomLocation
 $Customlocations=az customlocation list | ConvertFrom-Json
 $CustomLocation=$CustomLocations | Select DisplayName,Location,ID,ResourceGroup | Out-GridView -OutputMode Single -Title "Please select custom location"

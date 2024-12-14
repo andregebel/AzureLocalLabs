@@ -32,6 +32,12 @@ This lab assumes the most challenging approach - CAU upgrade not working (as I w
 
 You will learn how to upgrade OS from install media, how to transition from traditional networking to NetworkATC while keeping all VMs up and running and how to onboard cluster to modern Lifecycle Management (23H2)
 
+Official Dell KB https://www.dell.com/support/kbdoc/en-us/000259175/upgrade-azure-local-version-22h2-to-azure-local-version-23h2
+
+Official Microsoft Documentation: https://learn.microsoft.com/en-us/azure/azure-local/upgrade/about-upgrades-23h2
+
+Always make sure you have backup of your VMS!
+
 ## Prerequisites
 
 * Hydrated MSLab with LabConfig from [01-HydrateMSLab](../../admin-guides/01-HydrateMSLab/readme.md)

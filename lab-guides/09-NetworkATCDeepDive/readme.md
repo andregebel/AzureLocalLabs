@@ -16,18 +16,6 @@
 
 The main prerequisite is to have Azure Local or Windows Server 2025 cluster to play with. You can follow [Azure Local](../../lab-guides/01a-DeployAzureStackHCICluster-CloudBasedDeployment/readme.md) and [Windows Server](../../lab-guides/03-TestingWindowsServer2025/readme.md) deployement guides to create one.
 
-You can also create following lab to play with Windows Server switchless
-
-```PowerShell
-$LabConfig=@{ DomainAdminName='LabAdmin'; AdminPassword='LS1setup!'; <#Prefix = 'WSLab-' ;#> DCEdition='4'; Internet=$true ; AdditionalNetworksConfig=@(); VMs=@()}
-
-#Windows Server 2025
-1..5 | ForEach-Object {$LABConfig.VMs += @{ VMName = "S2D$_" ; Configuration = 'S2D' ; ParentVHD = 'Win2025Core_G2.vhdx'; HDDNumber = 8; HDDSize= 4TB ; MemoryStartupBytes= 1GB ; MGMTNICs=6}} 
-
-#Management machine
-$LabConfig.VMs += @{ VMName = 'Management' ; ParentVHD='Win2025_G2.vhdx' ; MGMTNICs=1 ; AddToolsVHD=$True }
- 
-```
 ## Understanding Network ATC commands
 
 If you made it into this guide, let's add more tips and tricks. All commands will be running from "Management" machine as it's a best practice for managing clusters at scale. Network ATC PowerShell modules needed to be copied from Azure Local (Azure Stack HCI) 21H2 into Windows Server 2022. Thankfully, Network ATC is included in Windows Server 2025.

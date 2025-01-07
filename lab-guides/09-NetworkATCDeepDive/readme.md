@@ -191,6 +191,11 @@ get-service -ComputerName $ClusterNodes -Name NetworkATC
 Invoke-command -ComputerName $ClusterNodes -ScriptBlock {Get-WinEvent -FilterHashtable @{LogName="Microsoft-Windows-Networking-NetworkAtc/Operational"}  -MaxEvents 100 }| Select TimeCreated,Level,Message,LogName,PSComputerName | Out-Gridview -Title "NetATC Operational"
 Invoke-command -ComputerName $ClusterNodes -ScriptBlock {Get-WinEvent -FilterHashtable @{LogName="Microsoft-Windows-Networking-NetworkAtc/Admin"}  -MaxEvents 100 }| Select TimeCreated,Level,Message,LogName,PSComputerName | Out-Gridview -Title "NetATC Admin"
 
+#displaying all settings
+$allgoalstates=Get-NetIntentAllGoalStates -ClusterName $ClusterName
+$allgoalstates.Values | ConvertTo-Json -Depth 4
+
+#
 ```
 
 ![](./media/powershell08.png)
@@ -269,3 +274,21 @@ Invoke-command -ComputerName $ClusterNodes -ScriptBlock {Get-WinEvent -FilterHas
 ```
 
 ![](./media/powershell09.png)
+
+## Retrying provision
+
+```PowerShell
+$ClusterName="AXClus02"
+#make sure failover clustering powershell and NetworkATC is installed and grab nodes
+Install-WindowsFeature -Name RSAT-Clustering-PowerShell,NetworkATC
+$ClusterNodes=(Get-ClusterNode -Cluster $ClusterName).Name
+
+#grab Intent
+$IntentName=(Get-NetIntent -ClusterName $ClusterName | Where-Object IsStorageIntentSet).IntentName
+
+#set RetryState for first node
+Set-NetIntentRetryState -ClusterName $ClusterName -NodeName $ClusterNodes[0] -Name $intentname
+
+```
+
+![](./media/powershell10.png)

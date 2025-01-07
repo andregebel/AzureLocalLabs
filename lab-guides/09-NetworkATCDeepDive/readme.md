@@ -168,11 +168,19 @@ get-service -ComputerName $ClusterNodes -Name NetworkATC
 
 ![](./media/powershell04.png)
 
+![](./media/powershell04.1.png)
+
 ![](./media/powershell05.png)
+
+![](./media/powershell05.1.png)
 
 ![](./media/powershell06.png)
 
 ![](./media/powershell07.png)
+
+![](./media/powershell07.1.png)
+
+![](./media/powershell07.2.png)
 
 ## Troubleshooting Network ATC
 

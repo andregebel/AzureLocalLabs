@@ -268,12 +268,24 @@ do {
 get-netintent -ClusterName $ClusterName
 (get-netintent -ClusterName $ClusterName).AdapterAdvancedParametersOverride
 
+#as you can see, the value sticks and was not removed. To remove it, let's remove and introduce intent back
+$intent=Get-NetIntent -ClusterName $ClusterName
+$intent
+Remove-NetIntent -Name $intent.IntentName -ClusterName $ClusterName
+#remove global override - does not work (should - as it's per docs)
+$override=New-NetIntentGlobalClusterOverrides
+Remove-NetIntent -ClusterName $ClusterName -GlobalOverrides $override
+#add intents back
+Add-NetIntent -ClusterName $ClusterName -Name $Intent.IntentName -AdapterName $Intent.NetAdapterNamesAsList -Compute -Management -Storage -PutGlobal $true
+
 #check log
 Invoke-command -ComputerName $ClusterNodes -ScriptBlock {Get-WinEvent -FilterHashtable @{LogName="Microsoft-Windows-Networking-NetworkAtc/Admin"}  -MaxEvents 100 }| Select TimeCreated,Level,Message,LogName,PSComputerName | Out-Gridview -Title "NetATC Admin"
  
 ```
 
 ![](./media/powershell09.png)
+
+![](./media/powershell11.png)
 
 ## Retrying provision
 
@@ -292,3 +304,5 @@ Set-NetIntentRetryState -ClusterName $ClusterName -NodeName $ClusterNodes[0] -Na
 ```
 
 ![](./media/powershell10.png)
+
+## Modifying 

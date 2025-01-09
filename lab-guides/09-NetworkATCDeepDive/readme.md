@@ -7,10 +7,13 @@
     - [Understanding Network ATC commands](#understanding-network-atc-commands)
     - [Understanding Network ATC status and default values](#understanding-network-atc-status-and-default-values)
     - [Troubleshooting Network ATC](#troubleshooting-network-atc)
+    - [Troubleshooting - Advanced tracing](#troubleshooting---advanced-tracing)
     - [Adjusting intents using overrides](#adjusting-intents-using-overrides)
-    - [Resetting values back](#resetting-values-to-back)
+    - [Resetting values back](#resetting-values-back)
+    - [Retrying provision](#retrying-provision)
 
 <!-- /TOC -->
+
 
 ## Prerequsites
 
@@ -200,6 +203,44 @@ $allgoalstates.Values | ConvertTo-Json -Depth 4
 
 ![](./media/powershell08.png)
 
+## Troubleshooting - Advanced tracing
+
+```PowerShell
+$ClusterName="AXClus02"
+$ComputerName="AXNode3"
+#make sure NetworkATC is installed
+Install-WindowsFeature -Name NetworkATC
+
+#start trace
+Set-NetIntentTracing -ComputerName $ComputerName
+
+#retry
+    #grab Intent
+    $IntentName=(Get-NetIntent -ClusterName $ClusterName | Where-Object IsStorageIntentSet).IntentName
+
+    #set RetryState for first node
+    Set-NetIntentRetryState -ClusterName $ClusterName -NodeName $ComputerName -Name $intentname
+    #start sleep a bit
+    Start-Sleep 10
+
+#stop trace
+Set-NetIntentTracing -ComputerName $ComputerName -StopTracing
+
+#convert to text
+Invoke-Command -ComputerName $ComputerName -ScriptBlock {netsh trace convert C:\Windows\NetworkAtcTrace.etl}
+
+#grab text
+Invoke-Command -ComputerName $ComputerName -ScriptBlock {Get-Content C:\Windows\NetworkAtcTrace.txt}
+
+#or simply copy item locally
+Copy-Item -Path \\$ComputerName\C$\Windows\NetworkAtcTrace.txt -Destination $env:userprofile\Downloads\NetworkATCTrace_"$ComputerName".txt
+
+```
+
+[network trace sample](./media/NetworkATCTrace_AXNode3.txt)
+
+![](./media/notepad01.png)
+
 ## Adjusting intents using overrides
 
 Let's adjust number of live migrations and Live migration speed as I think this might be the the most often changed value
@@ -304,5 +345,3 @@ Set-NetIntentRetryState -ClusterName $ClusterName -NodeName $ClusterNodes[0] -Na
 ```
 
 ![](./media/powershell10.png)
-
-## Modifying 

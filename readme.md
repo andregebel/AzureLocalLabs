@@ -24,6 +24,7 @@ Guides focused at deploying and operation of Azure Local Clusters
 * [06 Expanding Azure Local](lab-guides/06-ExpandingAzureStackHCI/)
 * [07 Bitlocker Deep Dive](lab-guides/07-BitlockerDeepDive/)
 * [08 Upgrading From 22H2](lab-guides/08-Upgradingfrom22H2/)
+* [09 Network ATC Deep Dive](lab-guides/09-NetworkATCDeepDive/)
 
 ## Tips & Tricks
 
@@ -38,6 +39,7 @@ Guides focused at deploying and operation of Azure Local Clusters
 * [09 Pulling image from Azure](tips&tricks/09-PullingImageFromAzure/)
 * [10 Connecting to Azure Resource Bridge](tips&tricks/10-ConnectingToARB/)
 * [11 CredSSP in Windows Server 2025](tips&tricks/11-WS2025CredSSP/)
+* [12 Cluster to Cluster Live Migration](tips&tricks/12-ClustertoClusterLiveMigration/)
 
 ## Deprecated labs
 

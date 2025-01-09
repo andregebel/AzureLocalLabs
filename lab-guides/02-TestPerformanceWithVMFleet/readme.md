@@ -249,7 +249,7 @@ Watch-FleetCluster -Cluster <ClusterName> -Sets *
 
 ![](./media/powershell09.png)
 
-**Step 7** Explore performance results by copying result.tsv to a computer, where excel is installed. Open result in excel and insert a table. You can review [sample result](./media/AX6515-All-Flash-4xSSD-32VMs-2Node.txt). 
+**Step 7** Explore performance results by copying result.tsv to a computer, where excel is installed. Open result in excel and insert a table. You can review [sample result](./media/MC760-All-Flash-8NVMes-4Node.txt). 
 
 ![](./media/excel01.png)
 

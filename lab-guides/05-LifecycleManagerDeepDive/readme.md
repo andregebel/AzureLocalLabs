@@ -90,16 +90,29 @@ https://aka.ms/AzureStackHci/SBE/Sideload
 Download and copy to Azure Stack HCI cluster
 
 ```PowerShell
-#download SBE
-Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip
+$ClusterName="AXClus02"
 
-#or 16G
-#Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
+#Set up web client to download files with autheticated web request in case there's a proxy
+$WebClient = New-Object System.Net.WebClient
+#$proxy = new-object System.Net.WebProxy
+$proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+$proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+#$proxy.Address = $proxyAdr
+#$proxy.useDefaultCredentials = $true
+$WebClient.proxy = $proxy
+#add headers wihth user-agent as some versions of SBE requires it for download
+$webclient.Headers.Add("User-Agent", "WhateverUser-AgentString/1.0")
+
+#Download SBE
+    $LatestSBE="https://dl.dell.com/FOLDER12528657M/1/Bundle_SBE_Dell_AX-15G_4.1.2412.1201.zip"
+    #or 16G
+    #$LatestSBE="https://dl.dell.com/FOLDER12528644M/1/Bundle_SBE_Dell_AX-16G_4.1.2412.1202.zip"
+    $FileName=$($LatestSBE.Split("/")| Select-Object -Last 1)
+    $WebClient.DownloadFile($LatestSBE,"$env:userprofile\Downloads\$FileName")
+
 
 #expand archive
-Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
-#Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
-
+Expand-Archive -Path $env:userprofile\Downloads\$FileName -DestinationPath $env:userprofile\Downloads\SBE -Force
 
 #replace metadata file with latest metadata from SBEUpdate address
 Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFIle $env:userprofile\Downloads\SBE\SBE_Discovery_Dell.xml
@@ -345,15 +358,29 @@ Invoke-Command -ComputerName $ClusterName -ScriptBlock {
 #cleanup downloaded packages
 Remove-Item -Path $env:userprofile\Downloads\SBE\*.* -Recurse
 
-#download SBE
-Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip
 
-#or 16G
-#Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
+
+#Set up web client to download files with autheticated web request in case there's a proxy
+$WebClient = New-Object System.Net.WebClient
+#$proxy = new-object System.Net.WebProxy
+$proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+$proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+#$proxy.Address = $proxyAdr
+#$proxy.useDefaultCredentials = $true
+$WebClient.proxy = $proxy
+#add headers wihth user-agent as some versions of SBE requires it for download
+$webclient.Headers.Add("User-Agent", "WhateverUser-AgentString/1.0")
+
+#Download SBE
+    $LatestSBE="https://dl.dell.com/FOLDER12528657M/1/Bundle_SBE_Dell_AX-15G_4.1.2412.1201.zip"
+    #or 16G
+    #$LatestSBE="https://dl.dell.com/FOLDER12528644M/1/Bundle_SBE_Dell_AX-16G_4.1.2412.1202.zip"
+    $FileName=$($LatestSBE.Split("/")| Select-Object -Last 1)
+    $WebClient.DownloadFile($LatestSBE,"$env:userprofile\Downloads\$FileName")
+
 
 #expand archive
-Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
-#Expand-Archive -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath $env:userprofile\Downloads\SBE -Force
+Expand-Archive -Path $env:userprofile\Downloads\$FileName -DestinationPath $env:userprofile\Downloads\SBE -Force
 
 #replace metadata file with latest metadata from SBEUpdate address
 Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFIle $env:userprofile\Downloads\SBE\SBE_Discovery_Dell.xml

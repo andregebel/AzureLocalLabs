@@ -395,38 +395,48 @@ Foreach ($Server in $Servers){
 
 **Step 5** Populate SBE Package on nodes (Dell AX Nodes)
 
-Note: following is just an example. There might be newer version available https://www.dell.com/support/kbdoc/en-us/000224407 (currently it is [Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip](https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip) and [Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip](https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip)). Most up-to-date version information can be found here: https://aka.ms/AzureStackSBEUpdate/DellEMC
+Note: following is just an example. There might be newer version available https://www.dell.com/support/kbdoc/en-us/000224407 (currently it is [Bundle_SBE_Dell_AX-15G_4.1.2412.1201.zip](https://dl.dell.com/FOLDER12528657M/1/Bundle_SBE_Dell_AX-15G_4.1.2412.1201.zip) and [Bundle_SBE_Dell_AX-16G_4.1.2412.1202.zip](https://dl.dell.com/FOLDER12528644M/1/Bundle_SBE_Dell_AX-16G_4.1.2412.1202.zip)). Most up-to-date version information can be found here: https://aka.ms/AzureStackSBEUpdate/DellEMC
 
 ```PowerShell
-        #download SBE
-        Start-BitsTransfer -Source https://dl.dell.com/FOLDER12231428M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip
+#Set up web client to download files with autheticated web request in case there's a proxy
+$WebClient = New-Object System.Net.WebClient
+#$proxy = new-object System.Net.WebProxy
+$proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+$proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+#$proxy.Address = $proxyAdr
+#$proxy.useDefaultCredentials = $true
+$WebClient.proxy = $proxy
+#add headers wihth user-agent as some versions of SBE requires it for download
+$webclient.Headers.Add("User-Agent", "WhateverUser-AgentString/1.0")
 
-        #or 16G
-        #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137723M/1/Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip
+#Download SBE
+    $LatestSBE="https://dl.dell.com/FOLDER12528657M/1/Bundle_SBE_Dell_AX-15G_4.1.2412.1201.zip"
+    #or 16G
+    #$LatestSBE="https://dl.dell.com/FOLDER12528644M/1/Bundle_SBE_Dell_AX-16G_4.1.2412.1202.zip"
+    $FileName=$($LatestSBE.Split("/")| Select-Object -Last 1)
+    $WebClient.DownloadFile($LatestSBE,"$env:userprofile\Downloads\$FileName")
 
-        #Transfer to servers
-        $Sessions=New-PSSession -ComputerName $Servers -Credential $Credentials
+    #Transfer to servers
+    $Sessions=New-PSSession -ComputerName $Servers -Credential $Credentials
+    foreach ($Session in $Session){
+        Copy-Item -Path $env:userprofile\Downloads\$FileName -Destination c:\users\$UserName\downloads\ -ToSession $Session
+    }
+
+    Invoke-Command -ComputerName $Servers -scriptblock {
+        #unzip to c:\SBE
+        New-Item -Path c:\ -Name SBE -ItemType Directory -ErrorAction Ignore
+        Expand-Archive -LiteralPath $env:userprofile\Downloads\$using:FileName -DestinationPath C:\SBE -Force
+    } -Credential $Credentials
+
+    #populate latest metadata file
+        #download
+        Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFile $env:userprofile\Downloads\SBE_Discovery_Dell.xml
+        #copy to servers
         foreach ($Session in $Session){
-            Copy-Item -Path $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -Destination c:\users\$UserName\downloads\ -ToSession $Session
+            Copy-Item -Path $env:userprofile\Downloads\SBE_Discovery_Dell.xml -Destination C:\SBE -ToSession $Session
         }
 
-        Invoke-Command -ComputerName $Servers -scriptblock {
-            #Start-BitsTransfer -Source https://dl.dell.com/FOLDER12137689M/1/Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip -Destination $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2409.1901.zip
-            #unzip to c:\SBE
-            New-Item -Path c:\ -Name SBE -ItemType Directory -ErrorAction Ignore
-            Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-15G_4.1.2410.901b.zip -DestinationPath C:\SBE -Force
-            #Expand-Archive -LiteralPath $env:userprofile\Downloads\Bundle_SBE_Dell_AS-HCI-AX-16G_4.1.2409.1501.zip -DestinationPath C:\SBE -Force
-        } -Credential $Credentials
-
-        #populate latest metadata file
-            #download
-            Invoke-WebRequest -Uri https://aka.ms/AzureStackSBEUpdate/DellEMC -OutFile $env:userprofile\Downloads\SBE_Discovery_Dell.xml
-            #copy to servers
-            foreach ($Session in $Session){
-                Copy-Item -Path $env:userprofile\Downloads\SBE_Discovery_Dell.xml -Destination C:\SBE -ToSession $Session
-            }
-
-        $Sessions | Remove-PSSession
+    $Sessions | Remove-PSSession
  
 ```
 
